@@ -25,7 +25,7 @@ Install the npm package via ```npm i photo-editor-sdk-react-native --save```
 
 ### Android
 
-### Step 0 - Follow the official installation guide
+#### Step 0 - Follow the official installation guide
 In order to have the base module running, follow the installation guide at https://docs.photoeditorsdk.com/guides/android/v4/introduction/getting_started
 
 Don't forget the ```PESDK.init()``` call to your ```MainApplication.java```.
