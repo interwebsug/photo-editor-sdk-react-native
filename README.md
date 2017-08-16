@@ -41,7 +41,7 @@ Add the following lines to your ```build.gradle``` file:
 
     dependencies {
         ....
-        compile project(':react-native-fbsdk')
+        compile project(':photo-editor-sdk-react-native')
     }
 
 ### Step 3 - Modify ```getPackages()``` inside ```MainApplication.java```
