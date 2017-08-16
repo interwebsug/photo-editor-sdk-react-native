@@ -1,0 +1,33 @@
+{
+  "name": "photo-editor-sdk-react-native",
+  "version": "1.0.0",
+  "description": "React Native implementation of the photoeditorsdk (https://www.photoeditorsdk.com/)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/interw3bs/photo-editor-sdk-react-native.git"
+  },
+  "keywords": [
+    "pesdk",
+    "photoeditor",
+    "filter",
+    "photoeditorsdk",
+    "react",
+    "native",
+    "camera",
+    "react",
+    "android"
+  ],
+  "author": "Michel Albers <technik@interwebs-ug.de>",
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/interw3bs/photo-editor-sdk-react-native/issues"
+  },
+  "homepage": "https://github.com/interw3bs/photo-editor-sdk-react-native#readme",
+  "dependencies": {
+    "react-native": "^0.47.1"
+  }
+}
