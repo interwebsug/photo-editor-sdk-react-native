@@ -1,6 +1,6 @@
 {
   "name": "photo-editor-sdk-react-native",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "React Native implementation of the photoeditorsdk (https://www.photoeditorsdk.com/)",
   "main": "index.js",
   "scripts": {
