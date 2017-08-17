@@ -1,4 +1,5 @@
 node_modules
+.DS_Store
 
 # https://github.com/github/gitignore/blob/master/Android.gitignore
 # Built application files
