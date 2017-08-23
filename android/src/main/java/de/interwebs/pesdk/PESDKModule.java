@@ -3,7 +3,7 @@
  *
  * Created 08/2017 by Interwebs UG (haftungsbeschränkt)
  * @author Michel Albers <m.albers@interwebs-ug.de>
- * @license WTFPL 2.0 (http://www.wtfpl.net/)
+ * @license The Unlincese (unlincese.org)
  *
  */
 
