@@ -13,11 +13,13 @@
 
 @property (strong, nonatomic) RCTPromiseResolveBlock resolver;
 @property (strong, nonatomic) RCTPromiseRejectBlock rejecter;
+@property (strong, nonatomic) PESDKPhotoEditViewController* editController;
+@property (strong, nonatomic) PESDKToolbarController* toolbarController;
 
 @end
 
 @implementation PhotoEditorSDK
-RCT_EXPORT_MODULE("PESDK");
+RCT_EXPORT_MODULE(PESDK);
 
 static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -36,15 +38,15 @@ RCT_EXPORT_METHOD(openEditor: (NSString*)path features: (NSArray*) features reso
   self.resolver = resolve;
   self.rejecter = reject;
   
-  PESDKToolbarController* controller = [PESDKToolbarController new];
+  self.toolbarController = [PESDKToolbarController new];
   UIImage* image = [UIImage imageWithContentsOfFile: path];
-  PESDKPhotoEditViewController* editController = [[PESDKPhotoEditViewController alloc] initWithPhoto: image];
-  editController.delegate = self;
+  self.editController = [[PESDKPhotoEditViewController alloc] initWithPhoto: image];
+  self.editController.delegate = self;
   UIViewController *currentViewController = RCTPresentedViewController();
   
   dispatch_async(dispatch_get_main_queue(), ^{
-    [controller pushViewController:editController animated:NO completion:NULL];
-    [currentViewController presentViewController:controller animated:YES completion:NULL];
+    [self.toolbarController pushViewController:self.editController animated:NO completion:NULL];
+    [currentViewController presentViewController:self.toolbarController animated:YES completion:NULL];
   });
 }
 
@@ -52,6 +54,9 @@ RCT_EXPORT_METHOD(openEditor: (NSString*)path features: (NSArray*) features reso
   if (self.rejecter != nil) {
     self.rejecter(@"DID_CANCEL", @"User did cancel the editor", nil);
     self.rejecter = nil;
+      dispatch_async(dispatch_get_main_queue(), ^{
+          [self.toolbarController.presentingViewController dismissViewControllerAnimated:YES completion:NULL];
+      });
   }
 }
 
@@ -59,6 +64,10 @@ RCT_EXPORT_METHOD(openEditor: (NSString*)path features: (NSArray*) features reso
   if (self.rejecter != nil) {
     self.rejecter(@"DID_FAIL_TO_GENERATE_PHOTO", @"Photo generation failed", nil);
     self.rejecter = nil;
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self.toolbarController.presentingViewController dismissViewControllerAnimated:YES completion:NULL];
+    });
+      
   }
 }
 
@@ -72,6 +81,10 @@ RCT_EXPORT_METHOD(openEditor: (NSString*)path features: (NSArray*) features reso
   
   [data writeToFile:path atomically:YES];
   self.resolver(path);
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [self.toolbarController.presentingViewController dismissViewControllerAnimated:YES completion:NULL];
+  });
+    
 }
 
 @end
