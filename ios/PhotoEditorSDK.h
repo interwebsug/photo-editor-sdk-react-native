@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "React/RCTBridgeModule.h"
-#import <PhotoEditorSDK/PhotoEditorSDK.h>
+#import <PhotoEditorSDK/PhotoEditorSDK-swift.h>
 
 @interface PhotoEditorSDK : NSObject <RCTBridgeModule, PESDKPhotoEditViewControllerDelegate>
 
