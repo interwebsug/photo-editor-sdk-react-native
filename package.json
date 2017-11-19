@@ -28,6 +28,5 @@
   },
   "homepage": "https://github.com/interw3bs/photo-editor-sdk-react-native#readme",
   "dependencies": {
-    "react-native": "^0.47.0"
   }
 }
