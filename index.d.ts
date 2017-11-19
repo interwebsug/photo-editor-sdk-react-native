@@ -1,13 +1,14 @@
 declare module "photo-editor-sdk-react-native" {
-  const TRANSFORM_TOOL: string;
-  const FILTER_TOOL: string;
-  const FOCUS_TOOL: string;
-  const ADJUST_TOOL: string;
-  const TEXT_TOOL: string;
-  const STICKER_TOOL: string;
-  const OVERLAY_TOOL: string;
-  const BRUSH_TOOL: string;
-  const DIVIDER: string;
+  const transformTool: any;
+  const filterTool: any;
+  const focusTool: any;
+  const adjustTool: any;
+  const textTool: any;
+  const stickerTool: any;
+  const overlayTool: any;
+  const brushTool: any;
+  const magic: any;
 
-  export function openEditor(imagePath: string, features: string[]): Promise<string>;
+  export function openEditor(imagePath: string, features: any[], options: object): Promise<string>;
+  export function openCamera(features: any[], options: object): Promise<string>;
 }
