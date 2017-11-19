@@ -1,32 +1,32 @@
-# React Native PhotoEditorSDK Implementation
-This project aims to be a complete implementation of the PhotoEditor SDK (https://www.photoeditorsdk.com/) in React Native. Currently only android is supported but iOS will follow shortly.
+# Photo Editor SDK React Native
+This project aims to be a complete implementation of the PhotoEditor SDK (https://www.photoeditorsdk.com/) in React Native for iOS and Android. 
+
+**Please note: a PhotoEditorSDK license is needed for usage: https://www.photoeditorsdk.com/** Unfortunetaly pricing is only available after asking for a quote. But it's affordable ;)
 
 ## Features
 
 ### You can:
-
-- Open the Editor with a given image path
+- Open the PESDK Camera - Open the Editor with a given image path
+- Use iOS & Android
 - Specify which editor features should be enabled
 - Retrieve the edited image path afterwards
 - Use TypeScript since a declaration file exists
 
 ### You can't (currently, but on todo list)
 
-- Open the PESDK Camera (will follow shortly)
 - Specify the path of the exported images
 - Add own stickers
-- Use iOS
 
 ## Installation
 
 ### General
 
-Install the npm package via ```npm i photo-editor-sdk-react-native --save```
+Install the npm package via ```npm i photo-editor-sdk-react-native --save``` or ```yarn add photo-editor-sdk-react-native --save```.
 
 ### Android
 
 #### Step 0 - Follow the official installation guide
-In order to have the base module running, follow the installation guide at https://docs.photoeditorsdk.com/guides/android/v4/introduction/getting_started
+In order to have the base module running, follow the installation guide at https://docs.photoeditorsdk.com/guides/android/v5/introduction/overview
 
 Don't forget the ```PESDK.init()``` call to your ```MainApplication.java```.
 
@@ -59,48 +59,133 @@ Add the PESDKPackage to the ```getPackages``` function inside ```MainApplication
 **That's it - you're done!**
 
 ### iOS
-iOS is still a TODO :( Here is a funny cat gif for you anyway.
+#### Step 0 - Follow the official installation guide
 
-![funny cat gif](https://media.giphy.com/media/IZl79Ik04xaUg/giphy.gif)
+In order to have the base module running, follow the installation guide at https://docs.photoeditorsdk.com/guides/ios/v8/introduction/overview but be sure to _NOT_ use ```use_frameworks!```.
+
+#### Step 1
+
+Add photo-editor-sdk-react-native to your Podfile:
+
+    pod 'photo-editor-sdk-react-native', :path => '../../photo-editor-sdk-react-native'
+
+and run ```pod install``` afterwards.
+
+#### Step 2
+
+Add the privacy keys to your ```Info.plist``` file or otherwise the app will crash when trying to use the camera or accessing the media library:
+
+    <key>NSCameraUsageDescription</key>
+    <string>Take photos</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Choose Photos from library</string>
+
+
+#### Step 3
+
+Don't forget the ```[PESDK unlockWithLicenseAt:[[NSBundle mainBundle] URLForResource:@"<<YOUR LICENSE FILE>>" withExtension:nil]];``` call to your ```AppDelegate.m```. (or equivalent in Swift)
+
+
+**That's it - you're done!**
 
 ## Usage
 
-### Open the image editor
+### Configuration options
 
-#### Step 1 - Import the module
+#### Features
+
+Available editor features are represented as constants:
+
+- Transformation (```PESDK.transformTool```)
+- Filters (```PESDK.filterTool```)
+- Focus points (```PESDK.focusTool```)
+- Color Adjustment (```PESDK.adjustTool```)
+- Text (```PESDK.textTool```)
+- Stickers (```PESDK.stickerTool```)
+- Overlays (```PESDK.overlayTool```)
+- Brush (```PESDK.brushTool```)
+- Magic (```PESDK.magic```) **NOT magicTool**
+
+see how to use them below.
+
+#### Configuration
+
+Avaiable configuration options are also represented as constant keys. The config has to be supplied as an array. See example below.
+
+- Background color for camera (```PESDK.backgroundColorCameraKey```)
+- Background color for editor (```PESDK.backgroundColorEditoKey```)
+- Background color for the editor menu (```PESDK.backgroundColorMenuEditorKey```)
+- Camera roll allowed (```PESDK.cameraRollAllowedKey```)
+- Show filters in camera (```PESDK.showFiltersInCameraKey```)
+
+### Import the module
+
 At the top of your .js or .ts file add ```import PESDK from 'photo-editor-sdk-react-native';```
 
-#### Step 2 - Open the editor
-Supply an image path to the editor and define the features you need. Available editor features are represented as string constants:
+### Open the image editor
 
-- Transformation (```PESDK.TRANSFORM_TOOL```)
-- Filters (```PESDK.FILTER_TOOL```)
-- Focus points (```PESDK.FOCUS_TOOL```)
-- Color Adjustment (```PESDK.ADJUST_TOOL```)
-- Text (```PESDK.TEXT_TOOL```)
-- Stickers (```PESDK.STICKER_TOOL```)
-- Overlays (```PESDK.OVERLAY_TOOL```)
-- Brush (```PESDK.BRUSH_TOOL```)
-- Divider (vertical line between buttons)  (```PESDK.DIVIDER```)
+Supply an image path to the editor and define the features you need:
+
+    PESDK.openEditor(
+         'PATH-TO-YOUR-IMAGE',
+         [features]
+    )
+    .then((imagePath) => /* .. do something with it .. */)
+    .catch((err) => /* .. handle the error .. */);
 
 If you want to open the editor with all features you could for example achieve this by:
 
     PESDK.openEditor('path-to-your-image', [
-      PESDK.TRANSFORM_TOOL,
-      PESDK.DIVIDER,
-      PESDK.FILTER_TOOL,
-      PESDK.FOCUS_TOOL,
-      PESDK.ADJUST_TOOL,
-      PESDK.TEXT_TOOL,
-      PESDK.STICKER_TOOL,
-      PESDK.OVERLAY_TOOL,
-      PESDK.BRUSH_TOOL
+      PESDK.transformTool,
+      PESDK.filterTool,
+      PESDK.focusTool,
+      PESDK.adjustTool,
+      PESDK.textTool,
+      PESDK.stickerTool,
+      PESDK.overlayTool,
+      PESDK.brushTool,
+      PESDK.magic
     ])
     .then((imagePath) => console.log(imagePath))
     .catch((err) => console.error(err));
 
+**Note for iOS users: Since Apple is a bit restrictive on file system access you may have to fiddle with RNFetchBlob (https://github.com/wkh237/react-native-fetch-blob) to directly open the editor with an image filepath.**
+
+### Open the camera view
+
+Open the camera and after choosing or taking an image enhance it with the editor: 
+
+    PESDK.openCamera(
+         [features],
+	 {config}
+    )
+    .then((imagePath) => /* .. do something with it .. */)
+    .catch((err) => /* .. handle the error .. */);
+
+Example with all options available used:
+
+    PESDK.openCamera([
+      PESDK.transformTool,
+      PESDK.filterTool,
+      PESDK.focusTool,
+      PESDK.adjustTool,
+      PESDK.textTool,
+      PESDK.stickerTool,
+      PESDK.overlayTool,
+      PESDK.brushTool,
+      PESDK.magic
+    ], {
+      [PESDK.backgroundColorCameraKey]: '#000',
+      [PESDK.backgroundColorEditorKey]: '#000',
+      [PESDK.backgroundColorMenuEditorKey]: '#000',
+      [PESDK.cameraRollAllowedKey]: false,
+      [PESDK.showFiltersInCameraKey]: true,
+    })
+    .then((imagePath) => console.log(imagePath))
+    .catch((err) => console.error(err));
+
 ### Contribution
-Contribution is always welcome in the form of pull requests :) 
+Contribution is always welcome via pull requests :) 
 
 ### License
-Unlicense: http://unlicense.org/ - Just do what you want with it ;)
+Unlicense: http://unlicense.org/ - Just do what you want with it.
