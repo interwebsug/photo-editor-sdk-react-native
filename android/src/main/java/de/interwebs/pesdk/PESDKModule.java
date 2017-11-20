@@ -110,20 +110,23 @@ public class PESDKModule extends ReactContextBaseJavaModule {
     }
 
     // Config builder
-    private SettingsList buildConfig(Map<String, Object> options, @Nullable ReadableArray features, @Nullable String imagePath) {
+    private SettingsList buildConfig(ReadableMap options, @Nullable ReadableArray features, @Nullable String imagePath) {
         SettingsList settingsList = new SettingsList();
         settingsList
                 .getSettingsModel(EditorLoadSettings.class)
                 .setImageSourcePath(imagePath)
                 .getSettingsModel(EditorSaveSettings.class)
-                // TODO: Make configurable
+                // TODO: Make export directory configurable
                 .setExportDir(Directory.DCIM, "PESDK")
                 .setExportPrefix("PESDK_")
                 .setSavePolicy(
                         EditorSaveSettings.SavePolicy.RETURN_ALWAYS_ONLY_OUTPUT
                 );
 
-                // TODO: Config options in PESDK v5 are limited compared to iOS :(
+                /*
+                 *  TODO: Config options in PESDK v5 are limited compared to iOS
+                 *        therefore they are not used currently
+                 */
 
         PESDKConfig config = settingsList.getConfig();
         ArrayList<ToolConfigInterface> tools = new ArrayList<>();
@@ -212,7 +215,7 @@ public class PESDKModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void openEditor(@NonNull String image, ReadableArray features, Map<String, Object> options, final Promise promise) {
+    public void openEditor(@NonNull String image, ReadableArray features, ReadableMap options, final Promise promise) {
         if (getCurrentActivity() == null) {
            promise.reject(E_ACTIVITY_DOES_NOT_EXIST, "Activity does not exist");
         } else {
@@ -227,7 +230,7 @@ public class PESDKModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void openCamera(ReadableArray features, Map<String, Object> options, final Promise promise) {
+    public void openCamera(ReadableArray features, ReadableMap options, final Promise promise) {
         if (getCurrentActivity() == null) {
             promise.reject(E_ACTIVITY_DOES_NOT_EXIST, "Activity does not exist");
         } else {

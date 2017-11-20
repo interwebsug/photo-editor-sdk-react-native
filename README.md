@@ -118,6 +118,8 @@ Avaiable configuration options are also represented as constant keys. The config
 - Camera roll allowed (```PESDK.cameraRollAllowedKey```)
 - Show filters in camera (```PESDK.showFiltersInCameraKey```)
 
+**Configuration will be ignored on android currently.**
+
 ### Import the module
 
 At the top of your .js or .ts file add ```import PESDK from 'photo-editor-sdk-react-native';```
@@ -128,7 +130,8 @@ Supply an image path to the editor and define the features you need:
 
     PESDK.openEditor(
          'PATH-TO-YOUR-IMAGE',
-         [features]
+         [features],
+         {config}
     )
     .then((imagePath) => /* .. do something with it .. */)
     .catch((err) => /* .. handle the error .. */);
@@ -145,7 +148,13 @@ If you want to open the editor with all features you could for example achieve t
       PESDK.overlayTool,
       PESDK.brushTool,
       PESDK.magic
-    ])
+    ], {
+      [PESDK.backgroundColorCameraKey]: '#000',
+      [PESDK.backgroundColorEditorKey]: '#000',
+      [PESDK.backgroundColorMenuEditorKey]: '#000',
+      [PESDK.cameraRollAllowedKey]: false,
+      [PESDK.showFiltersInCameraKey]: true,
+    })
     .then((imagePath) => console.log(imagePath))
     .catch((err) => console.error(err));
 
@@ -156,8 +165,8 @@ If you want to open the editor with all features you could for example achieve t
 Open the camera and after choosing or taking an image enhance it with the editor: 
 
     PESDK.openCamera(
-         [features],
-	 {config}
+      [features],
+      {config}
     )
     .then((imagePath) => /* .. do something with it .. */)
     .catch((err) => /* .. handle the error .. */);
