@@ -104,7 +104,7 @@ Available editor features are represented as constants:
 - Stickers (```PESDK.stickerTool```)
 - Overlays (```PESDK.overlayTool```)
 - Brush (```PESDK.brushTool```)
-- Magic (```PESDK.magic```) **NOT magicTool**
+- Magic (```PESDK.magic```) **not available on Android**
 
 see how to use them below.
 
@@ -192,6 +192,8 @@ Example with all options available used:
     })
     .then((imagePath) => console.log(imagePath))
     .catch((err) => console.error(err));
+
+**Note for iOS: There is no back button implemented so I added a swipe down gesture recognizer for closing the camera. On Android the hardware back button will work.**
 
 ### Contribution
 Contribution is always welcome via pull requests :) 
