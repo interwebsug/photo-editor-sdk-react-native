@@ -123,12 +123,14 @@ public class PESDKModule extends ReactContextBaseJavaModule {
                         EditorSaveSettings.SavePolicy.RETURN_ALWAYS_ONLY_OUTPUT
                 );
 
-                /*
-                 *  TODO: Config options in PESDK v5 are limited compared to iOS
-                 *        therefore they are not used currently
-                 */
+
+
+                // TODO: Config options in PESDK v5 are limited compared to iOS (or I didn't find them)
 
         PESDKConfig config = settingsList.getConfig();
+
+
+
         ArrayList<ToolConfigInterface> tools = new ArrayList<>();
         ArrayList featureList;
 

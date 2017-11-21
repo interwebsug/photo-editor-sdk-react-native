@@ -218,14 +218,24 @@ RCT_EXPORT_METHOD(openEditor: (NSString*)path options: (NSArray *)features optio
     [self _openEditor:image config:config features:features resolve:resolve reject:reject];
 }
 
+- (void)close {
+    UIViewController *currentViewController = RCTPresentedViewController();
+    [currentViewController dismissViewControllerAnimated:YES completion:nil];
+}
+
 RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) options resolve: (RCTPromiseResolveBlock)resolve reject: (RCTPromiseRejectBlock)reject) {
     __weak typeof(self) weakSelf = self;
     UIViewController *currentViewController = RCTPresentedViewController();
     PESDKConfiguration* config = [self _buildConfig:options];
     
     self.cameraController = [[PESDKCameraViewController alloc] initWithConfiguration:config];
+
     [self.cameraController.cameraController setupWithInitialRecordingMode:RecordingModePhoto error:nil];
     
+    UISwipeGestureRecognizer* swipeDownRecognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(close)];
+    swipeDownRecognizer.direction = UISwipeGestureRecognizerDirectionDown;
+    
+    [self.cameraController.view addGestureRecognizer:swipeDownRecognizer];
     [self.cameraController setCompletionBlock:^(UIImage * image, NSURL * _) {
         [currentViewController dismissViewControllerAnimated:YES completion:^{
             [weakSelf _openEditor:image config:config features:features resolve:resolve reject:reject];
