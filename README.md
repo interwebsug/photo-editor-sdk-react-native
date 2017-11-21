@@ -6,7 +6,8 @@ This project aims to be a complete implementation of the PhotoEditor SDK (https:
 ## Features
 
 ### You can:
-- Open the PESDK Camera - Open the Editor with a given image path
+- Open the PESDK Camera 
+- Open the Editor with a given image path
 - Use iOS & Android
 - Specify which editor features should be enabled
 - Retrieve the edited image path afterwards
