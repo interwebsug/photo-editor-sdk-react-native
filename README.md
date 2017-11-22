@@ -4,7 +4,6 @@ This project aims to be a complete implementation of the PhotoEditor SDK (https:
 **Please note: a PhotoEditorSDK license is needed for usage: https://www.photoeditorsdk.com/** Unfortunetaly pricing is only available after asking for a quote. But it's affordable ;)
 
 ## Features
-
 ### You can:
 - Open the PESDK Camera 
 - Open the Editor with a given image path
@@ -119,7 +118,7 @@ Avaiable configuration options are also represented as constant keys. The config
 - Camera roll allowed (```PESDK.cameraRollAllowedKey```)
 - Show filters in camera (```PESDK.showFiltersInCameraKey```)
 
-**Configuration will be ignored on android currently.**
+**Configuration will be ignored on android currently since not supported. Please use layout override described here: https://docs.photoeditorsdk.com/guides/android/v5/customization/styling**
 
 ### Import the module
 
