@@ -67,7 +67,7 @@ In order to have the base module running, follow the installation guide at https
 
 Add photo-editor-sdk-react-native to your Podfile:
 
-    pod 'photo-editor-sdk-react-native', :path => '../../photo-editor-sdk-react-native'
+    pod 'photo-editor-sdk-react-native', :path => '../node_modules/photo-editor-sdk-react-native'
 
 and run ```pod install``` afterwards.
 
@@ -83,7 +83,7 @@ Add the privacy keys to your ```Info.plist``` file or otherwise the app will cra
 
 #### Step 3
 
-Don't forget the ```[PESDK unlockWithLicenseAt:[[NSBundle mainBundle] URLForResource:@"<<YOUR LICENSE FILE>>" withExtension:nil]];``` call to your ```AppDelegate.m```. (or equivalent in Swift)
+Don't forget the ```[PESDK unlockWithLicenseAt:[[NSBundle mainBundle] URLForResource:@"<<YOUR LICENSE FILE>>" withExtension:nil]];``` call to your ```AppDelegate.m```. (or equivalent in Swift) Make sure to include your license file in ```Copy Bundle Resource``` under ```Build Phases```.
 
 
 **That's it - you're done!**
