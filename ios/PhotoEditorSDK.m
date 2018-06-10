@@ -253,7 +253,9 @@ RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) option
         [weakSelf onCancel];
     };
     
-    [self.currentViewController presentViewController:self.cameraController animated:YES completion:nil];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.currentViewController presentViewController:self.cameraController animated:YES completion:nil];
+    });
 }
 
 - (PESDKPhotoEditViewController *)createPhotoEditViewControllerWithPhoto:(PESDKPhoto *)photo configuration: (PESDKConfiguration *)configuration features: (NSArray*) features {
