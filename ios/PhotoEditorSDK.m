@@ -16,6 +16,7 @@ NSString* const kBackgroundColorMenuEditorKey = @"backgroundColorMenuEditor";
 NSString* const kBackgroundColorCameraKey = @"backgroundColorCamera";
 NSString* const kCameraRollAllowedKey = @"cameraRowAllowed";
 NSString* const kShowFiltersInCameraKey = @"showFiltersInCamera";
+NSString* const kShowCancelButtonInCameraKey = @"showCancelButtonInCamera";
 
 // Menu items
 typedef enum {
@@ -32,6 +33,7 @@ typedef enum {
 
 @interface PhotoEditorSDK ()
 
+@property (strong, nonatomic) UIViewController *currentViewController;
 @property (strong, nonatomic) RCTPromiseResolveBlock resolver;
 @property (strong, nonatomic) RCTPromiseRejectBlock rejecter;
 @property (strong, nonatomic) PESDKPhotoEditViewController* editController;
@@ -68,6 +70,7 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
              @"backgroundColorMenuEditorKey":   kBackgroundColorMenuEditorKey,
              @"cameraRollAllowedKey":           kCameraRollAllowedKey,
              @"showFiltersInCameraKey":         kShowFiltersInCameraKey,
+             @"showCancelButtonInCamera":       kShowCancelButtonInCameraKey,
              @"transformTool":                  [NSNumber numberWithInt: transformTool],
              @"filterTool":                     [NSNumber numberWithInt: filterTool],
              @"focusTool":                      [NSNumber numberWithInt: focusTool],
@@ -80,16 +83,10 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
     };
 }
 
--(void)_openEditor: (UIImage *)image config: (PESDKConfiguration *)config features: (NSArray*)features resolve: (RCTPromiseResolveBlock)resolve reject: (RCTPromiseRejectBlock)reject {
-    self.resolver = resolve;
-    self.rejecter = reject;
-    
-    // Just an empty model
-    PESDKPhotoEditModel* photoEditModel = [[PESDKPhotoEditModel alloc] init];
-    
+-(NSMutableArray<PESDKPhotoEditMenuItem *> *)buildMenuItems: (NSArray *)features {
     // Build the menu items from the features array if present
     NSMutableArray<PESDKPhotoEditMenuItem *>* menuItems = [[NSMutableArray alloc] init];
-    
+
     // Default features
     if (features == nil || [features count] == 0) {
         features = @[
@@ -104,7 +101,7 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
           [NSNumber numberWithInt: magic]
         ];
     }
-    
+
     [features enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         int feature = [obj intValue];
         switch (feature) {
@@ -166,15 +163,24 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
                 break;
         }
     }];
+
+    return menuItems;
+}
+
+-(void)_openEditor: (UIImage *)image config: (PESDKConfiguration *)config features: (NSArray*)features resolve: (RCTPromiseResolveBlock)resolve reject: (RCTPromiseRejectBlock)reject {
+    self.resolver = resolve;
+    self.rejecter = reject;
     
+    // Just an empty model
+    PESDKPhotoEditModel* photoEditModel = [[PESDKPhotoEditModel alloc] init];
+
+    NSMutableArray<PESDKPhotoEditMenuItem *>* menuItems = [self buildMenuItems:features];
     
     self.editController = [[PESDKPhotoEditViewController alloc] initWithPhoto:image configuration:config menuItems:menuItems photoEditModel:photoEditModel];
-    
     self.editController.delegate = self;
-    UIViewController *currentViewController = RCTPresentedViewController();
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        [currentViewController presentViewController:self.editController animated:YES completion:nil];
+        [self.currentViewController presentViewController:self.editController animated:YES completion:nil];
     });
 }
 
@@ -203,6 +209,10 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
             if ([[options allKeys] containsObject: kShowFiltersInCameraKey]) {
                 b.showFilters = [[options valueForKey:kShowFiltersInCameraKey] boolValue];
             }
+
+            if ([[options allKeys] containsObject: kShowCancelButtonInCameraKey]) {
+                b.showCancelButton = [[options valueForKey:kShowCancelButtonInCameraKey] boolValue];
+            }
             
             // TODO: Video recording not supported currently
             b.allowedRecordingModesAsNSNumbers = @[[NSNumber numberWithInteger:RecordingModePhoto]];
@@ -213,46 +223,61 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
 }
 
 RCT_EXPORT_METHOD(openEditor: (NSString*)path options: (NSArray *)features options: (NSDictionary*) options resolve: (RCTPromiseResolveBlock)resolve reject: (RCTPromiseRejectBlock)reject) {
+    self.currentViewController = RCTPresentedViewController();
+
     UIImage* image = [UIImage imageWithContentsOfFile: path];
     PESDKConfiguration* config = [self _buildConfig:options];
     [self _openEditor:image config:config features:features resolve:resolve reject:reject];
 }
 
-- (void)close {
-    UIViewController *currentViewController = RCTPresentedViewController();
-    [currentViewController dismissViewControllerAnimated:YES completion:nil];
-}
-
 RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) options resolve: (RCTPromiseResolveBlock)resolve reject: (RCTPromiseRejectBlock)reject) {
+    self.currentViewController = RCTPresentedViewController();
+
+    self.resolver = resolve;
+    self.rejecter = reject;
+
     __weak typeof(self) weakSelf = self;
-    UIViewController *currentViewController = RCTPresentedViewController();
     PESDKConfiguration* config = [self _buildConfig:options];
     
     self.cameraController = [[PESDKCameraViewController alloc] initWithConfiguration:config];
+    __weak PESDKCameraViewController *weakCameraViewController = self.cameraController;
 
     [self.cameraController.cameraController setupWithInitialRecordingMode:RecordingModePhoto error:nil];
+
+    self.cameraController.dataCompletionBlock = ^(NSData * _Nullable data) {
+        PESDKPhoto *photo = [[PESDKPhoto alloc] initWithData:data];
+        [weakCameraViewController presentViewController:[self createPhotoEditViewControllerWithPhoto:photo configuration:config features:features] animated:YES completion:nil];
+    };
+
+    self.cameraController.cancelBlock = ^(void) {
+        [weakSelf onCancel];
+    };
     
-    UISwipeGestureRecognizer* swipeDownRecognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(close)];
-    swipeDownRecognizer.direction = UISwipeGestureRecognizerDirectionDown;
-    
-    [self.cameraController.view addGestureRecognizer:swipeDownRecognizer];
-    [self.cameraController setCompletionBlock:^(UIImage * image, NSURL * _) {
-        [currentViewController dismissViewControllerAnimated:YES completion:^{
-            [weakSelf _openEditor:image config:config features:features resolve:resolve reject:reject];
-        }];
-    }];
-    
-    [currentViewController presentViewController:self.cameraController animated:YES completion:nil];
+    [self.currentViewController presentViewController:self.cameraController animated:YES completion:nil];
 }
 
--(void)photoEditViewControllerDidCancel:(PESDKPhotoEditViewController *)photoEditViewController {
+- (PESDKPhotoEditViewController *)createPhotoEditViewControllerWithPhoto:(PESDKPhoto *)photo configuration: (PESDKConfiguration *)configuration features: (NSArray*) features {
+  // Just an empty model
+  PESDKPhotoEditModel* photoEditModel = [[PESDKPhotoEditModel alloc] init];
+  NSMutableArray<PESDKPhotoEditMenuItem *>* menuItems = [self buildMenuItems:features];
+
+  PESDKPhotoEditViewController *photoEditViewController = [[PESDKPhotoEditViewController alloc] initWithPhotoAsset:photo configuration:configuration menuItems:menuItems photoEditModel:[[PESDKPhotoEditModel alloc] init]];
+  photoEditViewController.delegate = self;
+  return photoEditViewController;
+}
+
+-(void)onCancel {
     if (self.rejecter != nil) {
         self.rejecter(@"DID_CANCEL", @"User did cancel the editor", nil);
         self.rejecter = nil;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.editController.presentingViewController dismissViewControllerAnimated:YES completion:NULL];
+            [self.currentViewController dismissViewControllerAnimated:YES completion:nil];
         });
     }
+}
+
+-(void)photoEditViewControllerDidCancel:(PESDKPhotoEditViewController *)photoEditViewController {
+    [self onCancel];
 }
 
 -(void)photoEditViewControllerDidFailToGeneratePhoto:(PESDKPhotoEditViewController *)photoEditViewController {
@@ -260,15 +285,13 @@ RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) option
         self.rejecter(@"DID_FAIL_TO_GENERATE_PHOTO", @"Photo generation failed", nil);
         self.rejecter = nil;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.editController.presentingViewController dismissViewControllerAnimated:YES completion:NULL];
+            [self.currentViewController dismissViewControllerAnimated:YES completion:nil];
         });
-        
     }
 }
 
 -(void)photoEditViewController:(PESDKPhotoEditViewController *)photoEditViewController didSaveImage:(UIImage *)image imageAsData:(NSData *)data {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
-                                                         NSUserDomainMask, YES);
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
     NSString *randomPath = [PhotoEditorSDK randomStringWithLength:10];
     NSString* path = [documentsDirectory stringByAppendingPathComponent:
@@ -277,9 +300,8 @@ RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) option
     [data writeToFile:path atomically:YES];
     self.resolver(path);
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.editController.presentingViewController dismissViewControllerAnimated:YES completion:NULL];
+        [self.currentViewController dismissViewControllerAnimated:YES completion:nil];
     });
-    
 }
 
 @end
