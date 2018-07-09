@@ -125,6 +125,8 @@ Avaiable configuration options are also represented as constant keys. The config
 - Background color for the editor menu (```PESDK.backgroundColorMenuEditorKey```)
 - Camera roll allowed (```PESDK.cameraRollAllowedKey```)
 - Show filters in camera (```PESDK.showFiltersInCameraKey```)
+- Force croping (```PESDK.forceCrop```) set to true, defaults to false
+
 
 **Configuration will be ignored on android currently since not supported. Please use layout override described here: https://docs.photoeditorsdk.com/guides/android/v5/customization/styling**
 
