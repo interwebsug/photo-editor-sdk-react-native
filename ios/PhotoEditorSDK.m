@@ -16,7 +16,9 @@ NSString* const kBackgroundColorMenuEditorKey = @"backgroundColorMenuEditor";
 NSString* const kBackgroundColorCameraKey = @"backgroundColorCamera";
 NSString* const kCameraRollAllowedKey = @"cameraRowAllowed";
 NSString* const kShowFiltersInCameraKey = @"showFiltersInCamera";
+
 NSString* const kShowCancelButtonInCameraKey = @"showCancelButtonInCamera";
+NSString* const kForceCrop = @"forceCrop";
 
 // Menu items
 typedef enum {
@@ -38,6 +40,7 @@ typedef enum {
 @property (strong, nonatomic) RCTPromiseRejectBlock rejecter;
 @property (strong, nonatomic) PESDKPhotoEditViewController* editController;
 @property (strong, nonatomic) PESDKCameraViewController* cameraController;
+@property (strong, nonatomic) PESDKTransformToolControllerOptions* transFormController;
 
 
 @end
@@ -46,6 +49,7 @@ typedef enum {
 RCT_EXPORT_MODULE(PESDK);
 
 static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
 
 +(NSString *) randomStringWithLength: (int) len {
     
@@ -71,6 +75,7 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
              @"cameraRollAllowedKey":           kCameraRollAllowedKey,
              @"showFiltersInCameraKey":         kShowFiltersInCameraKey,
              @"showCancelButtonInCamera":       kShowCancelButtonInCameraKey,
+             @"forceCrop":                      kForceCrop,
              @"transformTool":                  [NSNumber numberWithInt: transformTool],
              @"filterTool":                     [NSNumber numberWithInt: filterTool],
              @"focusTool":                      [NSNumber numberWithInt: focusTool],
@@ -195,6 +200,11 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
                 b.menuBackgroundColor = [AVHexColor colorWithHexString: [options valueForKey:kBackgroundColorMenuEditorKey]];
             }
             
+            if ([options valueForKey:kForceCrop]) {
+                b.forceCropMode = [[options valueForKey:kForceCrop] boolValue];
+
+            }
+            
         }];
         
         [builder configureCameraViewController:^(PESDKCameraViewControllerOptionsBuilder * b) {
@@ -217,6 +227,17 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
             // TODO: Video recording not supported currently
             b.allowedRecordingModesAsNSNumbers = @[[NSNumber numberWithInteger:RecordingModePhoto]];
         }];
+
+        [builder configureTransformToolController:^(PESDKTransformToolControllerOptionsBuilder * _Nonnull options) {
+            options.allowFreeCrop = NO;
+            options.allowedCropRatios = @[
+                                          [[PESDKCropAspect alloc] initWithWidth:1 height:1 localizedName:@"Square" rotatable:NO],
+                                         [[PESDKCropAspect alloc] initWithWidth:3 height:2 localizedName:@"Landscape" rotatable:NO],
+                                         [[PESDKCropAspect alloc] initWithWidth:2 height:3 localizedName:@"Portrait" rotatable:NO]
+                                          ];
+        }];
+
+        
     }];
     
     return config;
@@ -240,8 +261,8 @@ RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) option
     PESDKConfiguration* config = [self _buildConfig:options];
     
     self.cameraController = [[PESDKCameraViewController alloc] initWithConfiguration:config];
-    __weak PESDKCameraViewController *weakCameraViewController = self.cameraController;
 
+    __weak PESDKCameraViewController *weakCameraViewController = self.cameraController;
     [self.cameraController.cameraController setupWithInitialRecordingMode:RecordingModePhoto error:nil];
 
     self.cameraController.dataCompletionBlock = ^(NSData * _Nullable data) {
@@ -270,7 +291,7 @@ RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) option
 
 -(void)onCancel {
     if (self.rejecter != nil) {
-        self.rejecter(@"DID_CANCEL", @"User did cancel the editor", nil);
+        // self.rejecter(@"DID_CANCEL", @"User did cancel the editor", nil);
         self.rejecter = nil;
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.currentViewController dismissViewControllerAnimated:YES completion:nil];
