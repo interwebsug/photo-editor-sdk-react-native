@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ly.img.android.sdk.models.config.Divider;
+import ly.img.android.sdk.models.config.CropAspectConfig;
 import ly.img.android.sdk.models.config.interfaces.ToolConfigInterface;
 import ly.img.android.sdk.models.constant.Directory;
 import ly.img.android.sdk.models.state.CameraSettings;
@@ -80,6 +81,8 @@ public class PESDKModule extends ReactContextBaseJavaModule {
     public static final String backgroundColorMenuEditorKey = "backgroundColorMenuEditor";
     public static final String cameraRollAllowedKey = "cameraRollAllowed";
     public static final String showFiltersInCameraKey = "showFiltersInCamera";
+    public static final String forceCrop = "forceCrop";
+
 
     // Listen for onActivityResult
     private final ActivityEventListener mActivityEventListener = new BaseActivityEventListener() {
@@ -184,6 +187,13 @@ public class PESDKModule extends ReactContextBaseJavaModule {
             }
         }
 
+        // Pass in forceCrop: true as an option to crop to square
+        if (options.hasKey("forceCrop") && options.getBoolean("forceCrop")) {
+            CropAspectConfig squareCrop = new CropAspectConfig(1, 1);
+            config.setForcedCropMode(true, squareCrop, squareCrop);
+            config.setAspects(squareCrop);
+        }
+
         config.setTools(tools);
 
         return settingsList;
@@ -212,6 +222,7 @@ public class PESDKModule extends ReactContextBaseJavaModule {
         constants.put("backgroundColorMenuEditorKey", backgroundColorMenuEditorKey);
         constants.put("cameraRollAllowedKey", cameraRollAllowedKey);
         constants.put("showFiltersInCameraKey", showFiltersInCameraKey);
+        constants.put("forceCrop", forceCrop);
 
         return constants;
     }
