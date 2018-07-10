@@ -71,14 +71,6 @@ Add photo-editor-sdk-react-native to your Podfile:
 
 and run ```pod install``` afterwards.
 
-in AppDelegate.m add @import PhotoEditorSDK; (objective c)
-
-then this line: ```[PESDK unlockWithLicenseAt:[[NSBundle mainBundle] URLForResource:@"ios_license" withExtension:nil]];```
-
-obtain your ios_license and import it by opening your project in xcode, right clight on your project, add files to project, import it. URLForResource should match name of the file. 
-
-then set Set the Always Embed Swift Standard Libraries build setting in your project’s Build Settings tab to Yes.
-
 #### Step 2
 
 Add the privacy keys to your ```Info.plist``` file or otherwise the app will crash when trying to use the camera or accessing the media library:
@@ -125,8 +117,6 @@ Avaiable configuration options are also represented as constant keys. The config
 - Background color for the editor menu (```PESDK.backgroundColorMenuEditorKey```)
 - Camera roll allowed (```PESDK.cameraRollAllowedKey```)
 - Show filters in camera (```PESDK.showFiltersInCameraKey```)
-- Force croping (```PESDK.forceCrop```) set to true, defaults to false
-
 
 **Configuration will be ignored on android currently since not supported. Please use layout override described here: https://docs.photoeditorsdk.com/guides/android/v5/customization/styling**
 
