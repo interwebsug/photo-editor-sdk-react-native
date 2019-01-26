@@ -167,7 +167,7 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
     return menuItems;
 }
 
--(void)_openEditor: (UIImage *)image config: (PESDKConfiguration *)config features: (NSArray*)features resolve: (RCTPromiseResolveBlock)resolve reject: (RCTPromiseRejectBlock)reject {
+-(void)_openEditor: (PESDKPhoto *)image config: (PESDKConfiguration *)config features: (NSArray*)features resolve: (RCTPromiseResolveBlock)resolve reject: (RCTPromiseRejectBlock)reject {
     self.resolver = resolve;
     self.rejecter = reject;
     
@@ -176,7 +176,7 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
 
     NSMutableArray<PESDKPhotoEditMenuItem *>* menuItems = [self buildMenuItems:features];
     
-    self.editController = [[PESDKPhotoEditViewController alloc] initWithPhoto:image configuration:config menuItems:menuItems photoEditModel:photoEditModel];
+    self.editController = [[PESDKPhotoEditViewController alloc] initWithPhotoAsset:image configuration:config menuItems:menuItems photoEditModel:photoEditModel];
     self.editController.delegate = self;
     
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -225,7 +225,7 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
 RCT_EXPORT_METHOD(openEditor: (NSString*)path options: (NSArray *)features options: (NSDictionary*) options resolve: (RCTPromiseResolveBlock)resolve reject: (RCTPromiseRejectBlock)reject) {
     self.currentViewController = RCTPresentedViewController();
 
-    UIImage* image = [UIImage imageWithContentsOfFile: path];
+    PESDKPhoto* image = [[PESDKPhoto alloc] initWithUrl:[NSURL URLWithString:path]];
     PESDKConfiguration* config = [self _buildConfig:options];
     [self _openEditor:image config:config features:features resolve:resolve reject:reject];
 }
