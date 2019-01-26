@@ -215,7 +215,7 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
             }
             
             // TODO: Video recording not supported currently
-            b.allowedRecordingModesAsNSNumbers = @[[NSNumber numberWithInteger:RecordingModePhoto]];
+            b.allowedRecordingModes = @[[NSNumber numberWithInteger:RecordingModePhoto]];
         }];
     }];
     
