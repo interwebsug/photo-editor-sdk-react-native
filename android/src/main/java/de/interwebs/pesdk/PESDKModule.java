@@ -1,55 +1,42 @@
 /**
  * PhotoEditorSDK ReactNative Module
- *
+ * <p>
  * Created 08/2017 by Interwebs UG (haftungsbeschränkt)
+ *
  * @author Michel Albers <m.albers@interwebs-ug.de>
  * @license The Unlincese (unlincese.org)
- *
  */
 
 package de.interwebs.pesdk;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.BaseActivityEventListener;
-import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableType;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import ly.img.android.sdk.models.config.Divider;
-import ly.img.android.sdk.models.config.interfaces.ToolConfigInterface;
-import ly.img.android.sdk.models.constant.Directory;
-import ly.img.android.sdk.models.state.CameraSettings;
-import ly.img.android.sdk.models.state.EditorLoadSettings;
-import ly.img.android.sdk.models.state.EditorMenuState;
-import ly.img.android.sdk.models.state.EditorSaveSettings;
-import ly.img.android.sdk.models.state.PESDKConfig;
-import ly.img.android.sdk.models.state.manager.SettingsList;
-import ly.img.android.sdk.tools.BrushEditorTool;
-import ly.img.android.sdk.tools.ColorAdjustmentTool;
-import ly.img.android.sdk.tools.FilterEditorTool;
-import ly.img.android.sdk.tools.FocusEditorTool;
-import ly.img.android.sdk.tools.OverlayEditorTool;
-import ly.img.android.sdk.tools.StickerEditorTool;
-import ly.img.android.sdk.tools.TextEditorTool;
-import ly.img.android.sdk.tools.TransformEditorTool;
-import ly.img.android.ui.activities.CameraPreviewBuilder;
-import ly.img.android.ui.activities.ImgLyIntent;
-import ly.img.android.ui.activities.PhotoEditorBuilder;
+import ly.img.android.pesdk.assets.filter.basic.FilterPackBasic;
+import ly.img.android.pesdk.backend.model.constant.Directory;
+import ly.img.android.pesdk.backend.model.state.EditorLoadSettings;
+import ly.img.android.pesdk.backend.model.state.EditorSaveSettings;
+import ly.img.android.pesdk.backend.model.state.manager.SettingsList;
+import ly.img.android.pesdk.ui.activity.CameraPreviewBuilder;
+import ly.img.android.pesdk.ui.activity.ImgLyIntent;
+import ly.img.android.pesdk.ui.activity.PhotoEditorBuilder;
+import ly.img.android.pesdk.ui.model.state.UiConfigFilter;
 
 public class PESDKModule extends ReactContextBaseJavaModule {
 
@@ -110,81 +97,22 @@ public class PESDKModule extends ReactContextBaseJavaModule {
     }
 
     // Config builder
-    private SettingsList buildConfig(ReadableMap options, @Nullable ReadableArray features, @Nullable String imagePath) {
+    private SettingsList buildConfig(ReadableMap options, @Nullable ReadableArray features, @Nullable Uri imageUri) {
         SettingsList settingsList = new SettingsList();
-        settingsList
-                .getSettingsModel(EditorLoadSettings.class)
-                .setImageSourcePath(imagePath)
-                .getSettingsModel(EditorSaveSettings.class)
-                // TODO: Make export directory configurable
+
+        settingsList.getSettingsModel(EditorSaveSettings.class)
                 .setExportDir(Directory.DCIM, "PESDK")
                 .setExportPrefix("PESDK_")
-                .setSavePolicy(
-                        EditorSaveSettings.SavePolicy.RETURN_ALWAYS_ONLY_OUTPUT
-                );
+                .setSavePolicy(EditorSaveSettings.SavePolicy.RETURN_ALWAYS_ONLY_OUTPUT);
 
+        settingsList.getSettingsModel(UiConfigFilter.class).setFilterList(
+                FilterPackBasic.getFilterPack()
+        );
 
-
-                // TODO: Config options in PESDK v5 are limited compared to iOS (or I didn't find them)
-
-        PESDKConfig config = settingsList.getConfig();
-
-
-
-        ArrayList<ToolConfigInterface> tools = new ArrayList<>();
-        ArrayList featureList;
-
-        if (features == null || features.size() == 0) {
-            featureList = new ArrayList();
-            featureList.add(transformTool);
-            featureList.add(filterTool);
-            featureList.add(focusTool);
-            featureList.add(adjustTool);
-            featureList.add(textTool);
-            featureList.add(stickerTool);
-            featureList.add(overlayTool);
-            featureList.add(brushTool);
-            featureList.add(magic);
-        } else {
-            featureList = features.toArrayList();
+        if (imageUri != null) {
+            settingsList.getSettingsModel(EditorLoadSettings.class)
+                    .setImageSource(imageUri);
         }
-
-
-
-        for (Object f: featureList) {
-            String feature = f.toString();
-            switch (feature) {
-                case transformTool:
-                    tools.add(new TransformEditorTool(R.string.imgly_tool_name_crop, R.drawable.imgly_icon_tool_transform));
-                    break;
-                case filterTool:
-                    tools.add(new FilterEditorTool(R.string.imgly_tool_name_filter, R.drawable.imgly_icon_tool_filters));
-                    break;
-                case focusTool:
-                    tools.add(new FocusEditorTool(R.string.imgly_tool_name_focus, R.drawable.imgly_icon_tool_focus));
-                    break;
-                case adjustTool:
-                    tools.add(new ColorAdjustmentTool(R.string.imgly_tool_name_adjust, R.drawable.imgly_icon_tool_adjust));
-                    break;
-                case textTool:
-                    tools.add(new TextEditorTool(R.string.imgly_tool_name_text, R.drawable.imgly_icon_tool_text));
-                    break;
-                case stickerTool:
-                    tools.add(new StickerEditorTool(R.string.imgly_tool_name_sticker, R.drawable.imgly_icon_tool_sticker));
-                    break;
-                case overlayTool:
-                    tools.add(new OverlayEditorTool(R.string.imgly_tool_name_overlay, R.drawable.imgly_icon_tool_overlay));
-                    break;
-                case brushTool:
-                    tools.add(new BrushEditorTool(R.string.imgly_tool_name_brush, R.drawable.imgly_icon_tool_brush));
-                    break;
-                case magic:
-                    // No magic tool on android
-                    break;
-            }
-        }
-
-        config.setTools(tools);
 
         return settingsList;
     }
@@ -219,11 +147,11 @@ public class PESDKModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void openEditor(@NonNull String image, ReadableArray features, ReadableMap options, final Promise promise) {
         if (getCurrentActivity() == null) {
-           promise.reject(E_ACTIVITY_DOES_NOT_EXIST, "Activity does not exist");
+            promise.reject(E_ACTIVITY_DOES_NOT_EXIST, "Activity does not exist");
         } else {
             mPESDKPromise = promise;
 
-            SettingsList settingsList = buildConfig(options, features, image.toString());
+            SettingsList settingsList = buildConfig(options, features, Uri.fromFile(new File(image)));
 
             new PhotoEditorBuilder(getCurrentActivity())
                     .setSettingsList(settingsList)
@@ -235,7 +163,8 @@ public class PESDKModule extends ReactContextBaseJavaModule {
     public void openCamera(ReadableArray features, ReadableMap options, final Promise promise) {
         if (getCurrentActivity() == null) {
             promise.reject(E_ACTIVITY_DOES_NOT_EXIST, "Activity does not exist");
-        } else {
+        }
+        else {
             mPESDKPromise = promise;
 
             SettingsList settingsList = buildConfig(options, features, null);
@@ -245,5 +174,4 @@ public class PESDKModule extends ReactContextBaseJavaModule {
                     .startActivityForResult(getCurrentActivity(), RESULT_CODE_PESDK);
         }
     }
-
 }
