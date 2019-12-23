@@ -2,19 +2,18 @@ buildscript {
     repositories {
         jcenter()
         google()
-        maven { url "https://artifactory.9elements.com/artifactory/imgly" }
+        maven { url "https://artifactory.img.ly/artifactory/imgly" }
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
-        classpath 'ly.img.android.pesdk:plugin:6.2.2'
+        classpath 'ly.img.android.pesdk:plugin:6.3.0'
     }
 }
 
 repositories {
     jcenter()
     google()
-    maven { url "https://artifactory.9elements.com/artifactory/imgly" }
+    maven { url "https://artifactory.img.ly/artifactory/imgly" }
 }
 
 apply plugin: 'com.android.library'
@@ -54,7 +53,7 @@ android {
 pesdkConfig {
     licencePath "pesdk_license"
 
-    pesdkVersion "6.2.2"
+    pesdkVersion "6.3.0"
 
     // If you use another supportLibVersion ('com.android.support'), change this version here to update your own supportLibVersion
     supportLibVersion "28.0.0"
