@@ -1,48 +1,20 @@
 //
-//  PhotoEditorSDK.m
+//  PhotoEditorSDKModule.m
 //  FantasticPost
 //
 //  Created by Michel Albers on 16.08.17.
 //  Copyright © 2017 Facebook. All rights reserved.
 //
 
-#import "PhotoEditorSDK.h"
+#import "PhotoEditorSDKModule.h"
 #import "React/RCTUtils.h"
 #import "AVHexColor.h"
 
-// Config options
-NSString* const kBackgroundColorEditorKey = @"backgroundColorEditor";
-NSString* const kBackgroundColorMenuEditorKey = @"backgroundColorMenuEditor";
-NSString* const kBackgroundColorCameraKey = @"backgroundColorCamera";
-NSString* const kCameraRollAllowedKey = @"cameraRowAllowed";
-NSString* const kShowFiltersInCameraKey = @"showFiltersInCamera";
-NSString* const kShowCancelButtonInCameraKey = @"showCancelButtonInCamera";
 
-// Menu items
-typedef enum {
-    transformTool,
-    filterTool,
-    focusTool,
-    adjustTool,
-    textTool,
-    stickerTool,
-    overlayTool,
-    brushTool,
-    magic,
-} FeatureType;
-
-@interface PhotoEditorSDK ()
-
-@property (strong, nonatomic) UIViewController *currentViewController;
-@property (strong, nonatomic) RCTPromiseResolveBlock resolver;
-@property (strong, nonatomic) RCTPromiseRejectBlock rejecter;
-@property (strong, nonatomic) PESDKPhotoEditViewController* editController;
-@property (strong, nonatomic) PESDKCameraViewController* cameraController;
-
-
+@interface PhotoEditorSDKModule ()
 @end
 
-@implementation PhotoEditorSDK
+@implementation PhotoEditorSDKModule
 RCT_EXPORT_MODULE(PESDK);
 
 static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -173,10 +145,8 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
     
     // Just an empty model
     PESDKPhotoEditModel* photoEditModel = [[PESDKPhotoEditModel alloc] init];
-
-    NSMutableArray<PESDKPhotoEditMenuItem *>* menuItems = [self buildMenuItems:features];
     
-    self.editController = [[PESDKPhotoEditViewController alloc] initWithPhotoAsset:image configuration:config menuItems:menuItems photoEditModel:photoEditModel];
+    self.editController = [[PESDKPhotoEditViewController alloc] initWithPhotoAsset:image configuration:config photoEditModel:photoEditModel];
     self.editController.delegate = self;
     
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -184,9 +154,9 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
     });
 }
 
--(PESDKConfiguration*)_buildConfig: (NSDictionary *)options {
+-(PESDKConfiguration*)_buildConfig: (NSArray *)features options: (NSDictionary *)options {
     PESDKConfiguration* config = [[PESDKConfiguration alloc] initWithBuilder:^(PESDKConfigurationBuilder * builder) {
-        [builder configurePhotoEditorViewController:^(PESDKPhotoEditViewControllerOptionsBuilder * b) {
+        [builder configurePhotoEditViewController:^(PESDKPhotoEditViewControllerOptionsBuilder * _Nonnull b) {
             if ([options valueForKey:kBackgroundColorEditorKey]) {
                 b.backgroundColor = [AVHexColor colorWithHexString: [options valueForKey:kBackgroundColorEditorKey]];
             }
@@ -195,6 +165,8 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
                 b.menuBackgroundColor = [AVHexColor colorWithHexString: [options valueForKey:kBackgroundColorMenuEditorKey]];
             }
             
+            NSMutableArray<PESDKPhotoEditMenuItem *>* menuItems = [self buildMenuItems:features];
+            b.menuItems = menuItems;
         }];
         
         [builder configureCameraViewController:^(PESDKCameraViewControllerOptionsBuilder * b) {
@@ -213,6 +185,7 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
             if ([[options allKeys] containsObject: kShowCancelButtonInCameraKey]) {
                 b.showCancelButton = [[options valueForKey:kShowCancelButtonInCameraKey] boolValue];
             }
+            b.showCancelButton = YES;
             
             // TODO: Video recording not supported currently
             b.allowedRecordingModes = @[[NSNumber numberWithInteger:RecordingModePhoto]];
@@ -225,8 +198,8 @@ static NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
 RCT_EXPORT_METHOD(openEditor: (NSString*)path options: (NSArray *)features options: (NSDictionary*) options resolve: (RCTPromiseResolveBlock)resolve reject: (RCTPromiseRejectBlock)reject) {
     self.currentViewController = RCTPresentedViewController();
 
-    PESDKPhoto* image = [[PESDKPhoto alloc] initWithUrl:[NSURL URLWithString:path]];
-    PESDKConfiguration* config = [self _buildConfig:options];
+    PESDKPhoto* image = [[PESDKPhoto alloc] initWithURL:[NSURL URLWithString:path]];
+    PESDKConfiguration* config = [self _buildConfig:features options:options];
     [self _openEditor:image config:config features:features resolve:resolve reject:reject];
 }
 
@@ -237,12 +210,19 @@ RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) option
     self.rejecter = reject;
 
     __weak typeof(self) weakSelf = self;
-    PESDKConfiguration* config = [self _buildConfig:options];
+    PESDKConfiguration* config = [self _buildConfig:features options:options];
     
     self.cameraController = [[PESDKCameraViewController alloc] initWithConfiguration:config];
     __weak PESDKCameraViewController *weakCameraViewController = self.cameraController;
 
     [self.cameraController.cameraController setupWithInitialRecordingMode:RecordingModePhoto error:nil];
+
+    self.cameraController.completionBlock = ^(UIImage * _Nullable image, NSURL * _Nullable url) {
+      if (image != nil) {
+        PESDKPhoto *photo = [[PESDKPhoto alloc] initWithImage:image];
+        [weakCameraViewController presentViewController:[self createPhotoEditViewControllerWithPhoto:photo configuration:config features:features] animated:YES completion:nil];
+      }
+    };
 
     self.cameraController.dataCompletionBlock = ^(NSData * _Nullable data) {
         PESDKPhoto *photo = [[PESDKPhoto alloc] initWithData:data];
@@ -252,7 +232,7 @@ RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) option
     self.cameraController.cancelBlock = ^(void) {
         [weakSelf onCancel];
     };
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.currentViewController presentViewController:self.cameraController animated:YES completion:nil];
     });
@@ -261,9 +241,8 @@ RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) option
 - (PESDKPhotoEditViewController *)createPhotoEditViewControllerWithPhoto:(PESDKPhoto *)photo configuration: (PESDKConfiguration *)configuration features: (NSArray*) features {
   // Just an empty model
   PESDKPhotoEditModel* photoEditModel = [[PESDKPhotoEditModel alloc] init];
-  NSMutableArray<PESDKPhotoEditMenuItem *>* menuItems = [self buildMenuItems:features];
 
-  PESDKPhotoEditViewController *photoEditViewController = [[PESDKPhotoEditViewController alloc] initWithPhotoAsset:photo configuration:configuration menuItems:menuItems photoEditModel:[[PESDKPhotoEditModel alloc] init]];
+  PESDKPhotoEditViewController *photoEditViewController = [[PESDKPhotoEditViewController alloc] initWithPhotoAsset:photo configuration:configuration photoEditModel:photoEditModel];
   photoEditViewController.delegate = self;
   return photoEditViewController;
 }
@@ -295,11 +274,13 @@ RCT_EXPORT_METHOD(openCamera: (NSArray*) features options:(NSDictionary*) option
 -(void)photoEditViewController:(PESDKPhotoEditViewController *)photoEditViewController didSaveImage:(UIImage *)image imageAsData:(NSData *)data {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *randomPath = [PhotoEditorSDK randomStringWithLength:10];
+    NSString *randomPath = [PhotoEditorSDKModule randomStringWithLength:10];
     NSString* path = [documentsDirectory stringByAppendingPathComponent:
                       [randomPath stringByAppendingString:@".jpg"] ];
     
-    [data writeToFile:path atomically:YES];
+    NSData *imageData = UIImageJPEGRepresentation(image, 1.0);
+    bool saved = [imageData writeToFile:path atomically:YES];
+
     self.resolver(path);
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.currentViewController dismissViewControllerAnimated:YES completion:nil];

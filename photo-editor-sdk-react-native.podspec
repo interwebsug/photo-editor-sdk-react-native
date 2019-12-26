@@ -10,15 +10,15 @@ Pod::Spec.new do |s|
   s.license        = package['license']
   s.author         = package['author']
   s.homepage       = package['homepage']
-  s.source         = { :git => 'https://github.com/interw3bs/photo-editor-sdk-react-native', :tag => s.version }
+  s.source         = { :git => 'https://github.com/mrmilu/photo-editor-sdk-react-native', :tag => s.version }
 
   s.requires_arc   = true
-  s.platform       = :ios, '8.0'
+  s.platform       = :ios, '9.0'
 
   s.preserve_paths = 'LICENSE', 'README.md', 'package.json', 'index.js'
   s.source_files   = 'ios/*.{h,m}'
 
   s.dependency 'AVHexColor'
   s.dependency 'React'
-  s.dependency 'PhotoEditorSDK'
+  s.dependency 'PhotoEditorSDK', '~> 10.7.0'
 end
